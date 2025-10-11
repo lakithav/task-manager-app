@@ -1,0 +1,35 @@
+# This is the name of our CI/CD pipeline
+name: Java CI with Maven
+
+# This section defines when the pipeline should run.
+# 'on: [push]' means it will run every time you push code.
+on: [push]
+
+# This section defines the actual "jobs" or steps in our assembly line.
+jobs:
+  # We only have one job, which we'll call "build-and-test".
+  build-and-test:
+    # This tells GitHub to run our job on the latest version of Ubuntu Linux.
+    runs-on: ubuntu-latest
+
+    # These are the sequential steps the job will perform.
+    steps:
+      # Step 1: Check out the code from our repository.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the correct Java environment (JDK 21).
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      # Step 3: Build the project and run ALL tests.
+      # This single command compiles the code and runs every test we have created:
+      # - JUnit unit tests (TDD)
+      # - Cucumber tests (BDD)
+      # - Selenium UI tests (in headless mode)
+      - name: Build and run tests with Maven
+        run: mvn -B test
