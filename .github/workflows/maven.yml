@@ -2,12 +2,10 @@
 name: Java CI with Maven
 
 # This section defines when the pipeline should run.
-# 'on: [push]' means it will run every time you push code.
 on: [push]
 
 # This section defines the actual "jobs" or steps in our assembly line.
 jobs:
-  # We only have one job, which we'll call "build-and-test".
   build-and-test:
     # This tells GitHub to run our job on the latest version of Ubuntu Linux.
     runs-on: ubuntu-latest
@@ -27,9 +25,8 @@ jobs:
           cache: "maven"
 
       # Step 3: Build the project and run ALL tests.
-      # This single command compiles the code and runs every test we have created:
-      # - JUnit unit tests (TDD)
-      # - Cucumber tests (BDD)
-      # - Selenium UI tests (in headless mode)
       - name: Build and run tests with Maven
+        # --- THIS IS THE FIX ---
+        # We tell this step to run from inside the 'demo' folder.
+        working-directory: ./demo
         run: mvn -B test
