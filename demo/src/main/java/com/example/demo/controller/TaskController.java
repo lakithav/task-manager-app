@@ -19,17 +19,20 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/tasks")
-@CrossOrigin(origins = "http://localhost:3000")
+// This allows requests from your React app, but doesn't check who the user is.
+@CrossOrigin(origins = "http://localhost:3000") 
 public class TaskController {
 
     @Autowired
     private TaskService taskService;
 
+    // This endpoint is completely public. Anyone can see all the tasks.
     @GetMapping
     public List<Task> getAllTasks() {
         return taskService.getAllTasks();
     }
 
+    // This endpoint is also public. Anyone can create a new task.
     @PostMapping
     public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
         Task createdTask = taskService.createTask(task);

@@ -18,12 +18,11 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
+    // This method validates if a task with the same title exists
     public Task createTask(Task task) {
-    // --- ADD THIS VALIDATION LOGIC ---
-    if (task.getTitle() == null || task.getTitle().trim().isEmpty()) {
-        throw new IllegalArgumentException("Task title cannot be empty.");
+        if (taskRepository.findByTitle(task.getTitle()).isPresent()) {
+            throw new IllegalStateException("A task with this title already exists.");
+        }
+        return taskRepository.save(task);
     }
-    // ------------------------------------
-    return taskRepository.save(task);
-}
 }
