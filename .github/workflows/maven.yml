@@ -1,32 +1,55 @@
-# This is the name of our CI/CD pipeline
-name: Java CI with Maven
+name: Build, Test, and Analyze
 
-# This section defines when the pipeline should run.
-on: [push]
+# This trigger is from SonarCloud - it runs on pushes to main AND on pull requests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
-# This section defines the actual "jobs" or steps in our assembly line.
 jobs:
-  build-and-test:
-    # This tells GitHub to run our job on the latest version of Ubuntu Linux.
+  build-and-analyze: # Renamed the job for clarity
+    name: Build, Test and Analyze
     runs-on: ubuntu-latest
 
-    # These are the sequential steps the job will perform.
     steps:
-      # Step 1: Check out the code from our repository.
+      # Step 1: Check out code (using SonarCloud's recommended setting)
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Step 2: Set up the correct Java environment (JDK 21).
+      # Step 2: Set up JDK 21 (your project's version)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: "maven"
 
-      # Step 3: Build the project and run ALL tests.
+      # Step 3: Cache dependencies for faster runs (from SonarCloud)
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # Step 4: Build and run all backend tests first
       - name: Build and run tests with Maven
-        # --- THIS IS THE FIX ---
-        # We tell this step to run from inside the 'demo' folder.
-        working-directory: ./demo
+        working-directory: ./demo # Run this step inside the 'demo' folder
         run: mvn -B test
+
+      # Step 5: If tests pass, run the SonarCloud analysis
+      - name: Analyze with SonarCloud
+        working-directory: ./demo # Also run this step inside the 'demo' folder
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Provides access to GitHub metadata
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Your secret SonarCloud token
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=lakithav_task-manager-app
